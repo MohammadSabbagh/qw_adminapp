@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { Link, useParams, useHistory, useLocation } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { debounce } from "debounce";
+import { Link, useParams } from "react-router-dom";
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import InputAdornment from '@material-ui/core/InputAdornment';
@@ -7,8 +8,14 @@ import IconButton from '@material-ui/core/IconButton';
 import StarBorderIcon from '@material-ui/icons/StarBorder';
 import StarIcon from '@material-ui/icons/Star';
 import ArrowBackIcon from '@material-ui/icons/ArrowBack';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import DialogTitle from '@material-ui/core/DialogTitle';
 
-import { getLocation, updateLocation } from '../util/functions'
+import { getLocation, updateLocation, checkCam, createCam } from '../util/functions'
 
 const locationFlag = {
   title: false,
@@ -20,10 +27,14 @@ const locationFlag = {
   cams:false
 }
 
-export default () => {
+export default ({history } ) => {
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [updated, setUpdated] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newCamId, setNewCamId] = useState('');
+  const [checkingId, setCheckingId] = useState(false);
+  const [isCamUnique, setIsCamUnique] = useState(true);
 
   const [location, setLocation] = useState();
   const [locationCopy, setLocationCopy] = useState();
@@ -53,9 +64,10 @@ export default () => {
     const value = e.target.value;
     //const camsNew = Object.assign({},location.cams, {[camKey]:value});
     const camsNew = { ...location.cams , [camKey]:value}
+    const locationNew = {...location, cams: camsNew }
     //console.log('camsNew',camsNew);
 
-    setLocation({...location, cams: camsNew })
+    setLocation(locationNew)
     console.log('locations',location);
 
     const camsState = JSON.stringify(camsNew) != JSON.stringify(locationCopy.cams)
@@ -90,17 +102,68 @@ export default () => {
     await setUpdated(false)
   }
 
-  const addcam = () => {
+  const updateNewCamId = (e) => {
+    const value = e.target.value;
+    const valueStripped = value.replace(/[\s\.\_\-]+/g, '').toLowerCase();
+    setNewCamId(valueStripped)
+    if (value){
+      setCheckingId(true)
+      checkCamUniqueDebounced(valueStripped)
+    }
 
   }
+
+  const checkCamUniqueDebounced = useCallback( debounce((v) => checkCamUnique(v), 500), []);
+
+  const checkCamUnique = async v => {
+    const camId = v.replace(/[\s\.\_\-]+/g, '').toLowerCase();
+    const isCamExist = await checkCam(camId)
+    console.log('isCamExist',isCamExist);
+    await setIsCamUnique(!isCamExist)
+    await setCheckingId(false)
+  }
+
+  const addCam = async () => {
+    let camsNew, locationNew, isFirstCam;
+    if(location.cams){
+      camsNew = { ...location.cams , [newCamId]:'dir'}
+      locationNew = {...location, cams: camsNew }
+    } else {
+      console.log('catcha');
+      isFirstCam = true
+      camsNew =
+      locationNew = {...location, cams: { [newCamId]:'dir'}, default:newCamId }
+    }
+    await setLocation(locationNew)
+
+    //await setDefault(newCamId)
+    //await createCam(locationId, newCamId)
+
+    closeModal()
+  }
+
+  const closeModal = () => { setIsModalOpen(false) }
+  const openModal = () => { setIsModalOpen(true) }
+
+  useEffect(() => {
+
+
+  },[location]);
 
   useEffect(() => {
 
     const start = async () => {
-      const locationObj = await getLocation(locationId);
-      await setLocation(locationObj)
-      await setLocationCopy(locationObj)
-      await setLoaded(true)
+      //let locationObj;
+      try {
+         const locationObj= await getLocation(locationId);
+         await setLocation(locationObj)
+         await setLocationCopy(locationObj)
+         await setLoaded(true)
+      } catch (error) {
+        console.log(error);
+        history.replace("/");
+      }
+
     }
 
     start()
@@ -124,7 +187,7 @@ export default () => {
           <h3>Cam List</h3>
           <div className="camList">
           {
-            Object.keys(location.cams).map(camKey => (
+            location.cams && Object.keys(location.cams).map(camKey => (
               <TextField
                 key={camKey}
                 placeholder="direction"
@@ -144,10 +207,41 @@ export default () => {
               />
             ))
           }
-          <Button variant="contained" onClick={addcam} fullWidth>
+          <Button variant="contained" onClick={openModal} fullWidth>
             Add New Cam
           </Button>
           </div>
+
+          <Dialog open={isModalOpen} onClose={closeModal} aria-labelledby="form-dialog-title">
+            <DialogTitle>Add New Cam</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                To add new camera, please enter a unique cam id here.
+              </DialogContentText>
+              <TextField
+                label="CAM ID"
+                value={newCamId}
+                onChange={updateNewCamId}
+                error={ !isCamUnique }
+                helperText={ !isCamUnique && 'Existed Cam ID '}
+                fullWidth
+                InputProps={{
+                  endAdornment: <InputAdornment position="start">{
+                     <CircularProgress size={checkingId?16:0} />
+                  }</InputAdornment>,
+                }}
+
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={closeModal} color="primary">
+                Cancel
+              </Button>
+              <Button onClick={addCam} color="primary" disabled={!isCamUnique || !newCamId}>
+                Add
+              </Button>
+            </DialogActions>
+          </Dialog>
 
           <div className="footer">
           <Button size="small"  onClick={resetLocation} disabled={!updated}>
@@ -162,6 +256,8 @@ export default () => {
                     : 'Saved'
               }
             </Button>
+
+
 
           </div>
         </>

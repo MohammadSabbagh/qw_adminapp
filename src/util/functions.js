@@ -9,7 +9,7 @@ const getLocations = () => new Promise( async (resolve,reject) => {
   let camList = [];
   for (const child in locationsObj) {
     const title = locationsObj[child].title;
-    const locationCams = locationsObj[child].cams.length;
+    const locationCams = locationsObj[child].cams ? locationsObj[child].cams.length:0;
     const locationId = child;
     camList.push({
       locationCams: locationCams,
@@ -23,6 +23,9 @@ const getLocations = () => new Promise( async (resolve,reject) => {
 const getLocation = (id) => new Promise( async (resolve,reject) => {
   const locationRef = db.ref(`locations/${id}`);
   const locationSnapshot = await locationRef.once('value');
+  if(!locationSnapshot.val()){
+    return reject('location doesnt exist');
+  }
   const locationObj = locationSnapshot.val();
   console.log('locationObj',locationObj);
   resolve(locationObj);
@@ -37,12 +40,14 @@ const updateLocation = (id,obj) => new Promise( async (resolve,reject) => {
 
 const createLocation = (id,obj) => new Promise( async (resolve,reject) => {
   const locationRef = db.ref(`locations/${id}`);
-  const locationCreate = await locationRef.set(obj);
+  const initProp = {default: '', cams:{}}
+  const initObj = {...initProp, ...obj}
+  const locationCreate = await locationRef.set(initObj);
   resolve(locationCreate);
 });
 
 const createCam = (locationId,camId) => new Promise( async (resolve,reject) => {
-  const camRef = db.ref(`locations/${locationId}/${camId}`);
+  const camRef = db.ref(`locations/${locationId}/cams/${camId}`);
   const camCreate = await camRef.set('dir');
   resolve(camCreate);
 });
