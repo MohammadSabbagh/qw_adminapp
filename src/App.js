@@ -1,9 +1,6 @@
-//import React, {useState} from 'react';
 import './style/index.scss';
-import { BrowserRouter as Router,Switch, Route } from "react-router-dom";
-
+import { BrowserRouter as Router,Switch, Route } from "react-router-dom"
 import Location from './pages/Location'
-import Header from './components/Header'
 import Locations from "./pages/Locations";
 import Login from "./pages/Login";
 import Logout from "./pages/Logout";
@@ -17,8 +14,7 @@ function App() {
     <AuthProvider>
       <Router>
           <div className="App">
-            <Header />
-            <main>
+            <main className="">
                 <Switch>
                   <PrivateRoute exact path="/" component={Locations} />
                   <Route exact path="/login" component={Login} />

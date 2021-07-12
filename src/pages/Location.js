@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { debounce } from "debounce";
 import { Link, useParams } from "react-router-dom";
+import Header from '../components/Header'
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import InputAdornment from '@material-ui/core/InputAdornment';
@@ -170,10 +171,11 @@ export default ({history } ) => {
   },[]);
 
   return (
-    <div className="page location">
+    <div className="location">
+    <Header />
       {
         loaded &&
-        <>
+        <div className="page">
           <h2>
           <Link className="backLink" to={`/`}><ArrowBackIcon /></Link>
           { locationCopy.title }</h2>
@@ -260,7 +262,7 @@ export default ({history } ) => {
 
 
           </div>
-        </>
+        </div>
       }
     </div>
   );

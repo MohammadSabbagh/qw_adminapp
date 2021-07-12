@@ -1,5 +1,5 @@
 body{
-  background: #fff;
+  background: #333;
   color:#333;
   margin: 0;
   font-family: "Roboto", "Helvetica", "Arial", sans-serif;
@@ -26,6 +26,11 @@ body{
   margin: 0 auto;
   padding-right: 1rem;
   padding-left: 1rem;
+  background: #fff;
+}
+
+.locationsPage{
+  background: #fff;
 }
 
 h2{
@@ -93,6 +98,8 @@ a, a.link {
     display: block;
     padding: .5rem;
     font-size: 1rem;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .MuiButton-contained.Mui-disabled {

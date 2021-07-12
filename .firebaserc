@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "ncmcloud1"
+  },
+  "targets": {
+    "ncmcloud1": {
+      "hosting": {
+        "admin": [
+          "ncmiadmin"
+        ]
+      }
+    }
+  }
+}

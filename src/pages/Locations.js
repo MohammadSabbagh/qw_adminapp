@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback  } from 'react';
 import { Link } from "react-router-dom";
 import { getLocations } from '../util/functions';
+import Header from '../components/Header'
 import Grid from '@material-ui/core/Grid';
 import AddIcon from '@material-ui/icons/Add';
 import Button from '@material-ui/core/Button';
@@ -20,7 +21,8 @@ export default () => {
   },[]);
 
   return (
-      <div>
+      <div className="locationsPage">
+        <Header />
         <Grid
           container
           direction="row"
