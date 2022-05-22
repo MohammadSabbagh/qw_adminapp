@@ -9,12 +9,14 @@ const getLocations = () => new Promise( async (resolve,reject) => {
   let camList = [];
   for (const child in locationsObj) {
     const title = locationsObj[child].title;
+    const visible = locationsObj[child].visible;
     const locationCams = locationsObj[child].cams ? locationsObj[child].cams.length:0;
     const locationId = child;
     camList.push({
       locationCams: locationCams,
       title: title,
-      locationId:locationId
+      locationId:locationId,
+      visible: visible
     });
   }
   resolve(camList);
@@ -34,6 +36,13 @@ const getLocation = (id) => new Promise( async (resolve,reject) => {
 const updateLocation = (id,obj) => new Promise( async (resolve,reject) => {
   const locationRef = db.ref(`locations/${id}`);
   const locationUpdate = await locationRef.update(obj);
+  console.log('locationUpdate',locationUpdate);
+  resolve(locationUpdate);
+});
+
+const updateLocationVis = ( id, value ) => new Promise( async (resolve,reject) => {
+  const locationRef = db.ref(`locations/${id}`);
+  const locationUpdate = await locationRef.update({visible: value});
   console.log('locationUpdate',locationUpdate);
   resolve(locationUpdate);
 });
@@ -77,6 +86,7 @@ export {
   getLocations,
   getLocation,
   updateLocation,
+  updateLocationVis,
   createLocation,
   createCam,
   checkLocation,
